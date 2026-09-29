@@ -10,6 +10,15 @@
 <body>
     <header class="site-header">
         <a class="brand" href="{% url 'records:home' %}">FamilyCare</a>
+        <nav>
+            {% if user.is_authenticated %}
+                <span class="nav-user">{{ user.username }}</span>
+                <a href="{% url 'records:logout' %}">Log out</a>
+            {% else %}
+                <a href="{% url 'records:login' %}">Log in</a>
+                <a href="{% url 'records:register' %}">Register</a>
+            {% endif %}
+        </nav>
     </header>
     <main class="container">
         {% block content %}{% endblock %}

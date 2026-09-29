@@ -52,6 +52,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'familycare.urls'
+LOGIN_URL = '/login/'
 
 TEMPLATES = [
     {

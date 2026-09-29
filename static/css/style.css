@@ -7,9 +7,14 @@ body {
 }
 
 .site-header {
+    align-items: center;
     background: #2563eb;
+    display: flex;
+    justify-content: space-between;
     padding: 1rem 2rem;
 }
+
+.site-header a { color: white; margin-left: 1rem; }
 
 .brand {
     color: white;
@@ -41,3 +46,9 @@ body {
 .muted {
     color: #6b7280;
 }
+
+.form-card { background: white; border-radius: 12px; margin: 0 auto; max-width: 500px; padding: 2rem; }
+label { display: block; font-weight: bold; margin-bottom: 0.35rem; }
+input { box-sizing: border-box; padding: 0.6rem; width: 100%; }
+button { background: #2563eb; border: 0; border-radius: 4px; color: white; cursor: pointer; padding: 0.7rem 1rem; }
+.error { color: #b91c1c; }
