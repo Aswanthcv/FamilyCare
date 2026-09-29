@@ -11,6 +11,7 @@ urlpatterns = [
     path('dashboard/', views.home, name='dashboard'),
     path('members/add/', views.add_member, name='add_member'),
     path('members/<int:member_id>/', views.member_detail, name='member_detail'),
+    path('members/<int:member_id>/profile-image/', views.view_profile_image, name='view_profile_image'),
     path('members/<int:member_id>/edit/', views.edit_member, name='edit_member'),
     path('members/<int:member_id>/delete/', views.delete_member, name='delete_member'),
     path('members/<int:member_id>/tests/add/', views.add_test_result, name='add_test_result'),

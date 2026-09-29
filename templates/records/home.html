@@ -6,7 +6,7 @@
     <div class="page-heading"><div><p class="eyebrow">Family health manager</p><h1>Welcome, {{ user.username }}!</h1><p class="muted">{{ members|length }} family member{{ members|length|pluralize }} in your account.</p></div><a class="button" href="{% url 'records:add_member' %}">Add Member</a></div>
     {% if members %}<div class="member-grid">
         {% for member in members %}<article class="member-card dashboard-card">
-            {% if member.profile_image %}<img src="{{ member.profile_image.url }}" alt="{{ member.full_name }}">{% endif %}
+            {% if member.profile_image %}<img src="{% url 'records:view_profile_image' member.id %}" alt="{{ member.full_name }}">{% endif %}
             <h2>{{ member.full_name }}</h2><p>Age: {{ member.age }} | Sex: {{ member.get_sex_display }}</p>
             <p>Blood group: {{ member.blood_group|default:'Not added' }}</p><p>Height: {{ member.height|default:'Not added' }} cm</p><p>Weight: {{ member.weight|default:'Not added' }} kg</p>
             <div class="card-actions"><a class="button small" href="{% url 'records:member_detail' member.id %}">View Profile</a> <a href="{% url 'records:edit_member' member.id %}">Edit</a> <a href="{% url 'records:delete_member' member.id %}">Delete</a></div>

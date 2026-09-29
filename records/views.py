@@ -84,6 +84,14 @@ def member_detail(request, member_id):
 
 
 @login_required
+def view_profile_image(request, member_id):
+    member = get_object_or_404(FamilyMember, id=member_id, user=request.user)
+    if not member.profile_image:
+        return redirect('records:member_detail', member_id=member.id)
+    return FileResponse(member.profile_image.open('rb'), as_attachment=False, filename=member.profile_image.name)
+
+
+@login_required
 def add_test_result(request, member_id):
     member = get_object_or_404(FamilyMember, id=member_id, user=request.user)
     if request.method == 'POST':

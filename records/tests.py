@@ -59,6 +59,7 @@ class FamilyMemberTests(TestCase):
         member = FamilyMember.objects.get(full_name='Asha Owner')
         self.assertEqual(member.user, self.user)
         self.assertTrue(member.profile_image.name.startswith('profile_images/'))
+        self.assertEqual(self.client.get(f'/members/{member.id}/profile-image/').status_code, 200)
 
         self.assertEqual(self.client.get(f'/members/{member.id}/').status_code, 200)
         response = self.client.post(f'/members/{member.id}/edit/', {

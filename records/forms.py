@@ -39,6 +39,24 @@ class RegistrationForm(UserCreationForm):
 class FamilyMemberForm(NoFutureDateFormMixin, forms.ModelForm):
     past_date_fields = ('date_of_birth',)
 
+    def clean_height(self):
+        height = self.cleaned_data.get('height')
+        if height is not None and height < 0:
+            raise forms.ValidationError('Height cannot be negative.')
+        return height
+
+    def clean_weight(self):
+        weight = self.cleaned_data.get('weight')
+        if weight is not None and weight < 0:
+            raise forms.ValidationError('Weight cannot be negative.')
+        return weight
+
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone', '')
+        if phone and (not phone.isdigit() or len(phone) != 10):
+            raise forms.ValidationError('Phone number must contain exactly 10 digits.')
+        return phone
+
     class Meta:
         model = FamilyMember
         exclude = ('user',)
