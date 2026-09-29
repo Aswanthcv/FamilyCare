@@ -124,6 +124,10 @@ input:focus, select:focus, textarea:focus { border-color: var(--primary); box-sh
    ========================================================= */
 .member-card p { margin: 0.35rem 0; }
 .member-card + .member-card { margin-top: 0.75rem; }
+.member-card a { background: #eff6ff; border: 1px solid #dbeafe; border-radius: var(--radius-sm); display: inline-block; font-size: 0.9rem; margin: 0.55rem 0.35rem 0 0; padding: 0.4rem 0.65rem; text-decoration: none; transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast); }
+.member-card a:hover { background: #dbeafe; border-color: #bfdbfe; transform: translateY(-1px); }
+.member-card a[href*="delete"] { background: #fef2f2; border-color: #fecaca; color: var(--danger); }
+.member-card a[href*="delete"]:hover { background: #fee2e2; border-color: #fca5a5; }
 
 /* =========================================================
    12. TIMELINE

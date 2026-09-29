@@ -1,3 +1,22 @@
 from django.contrib import admin
+from .models import (
+    FamilyMember,
+    TestResult,
+    MedicalReport,
+    DoctorVisit,
+    Prescription,
+    Insurance,
+    MedicalDocument,
+)
 
-# Register your models here.
+admin.site.register([
+    FamilyMember,
+    TestResult,
+    MedicalReport,
+    DoctorVisit,
+    Prescription,
+    Insurance,
+    MedicalDocument,
+])
+
+
