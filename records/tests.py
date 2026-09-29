@@ -4,7 +4,7 @@ from django.test import TestCase
 from io import BytesIO
 from PIL import Image
 
-from .models import DoctorVisit, FamilyMember, MedicalReport, TestResult
+from .models import DoctorVisit, FamilyMember, MedicalReport, Prescription, TestResult
 
 class AuthenticationTests(TestCase):
     def setUp(self):
@@ -249,3 +249,60 @@ class DoctorVisitTests(TestCase):
         self.assertEqual(self.client.get(f'/doctor-visits/{visit.id}/edit/').status_code, 404)
         self.assertEqual(self.client.get(f'/doctor-visits/{visit.id}/delete/').status_code, 404)
         self.assertEqual(self.client.get(f'/doctor-visits/{visit.id}/document/').status_code, 404)
+
+
+class PrescriptionTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='prescription-owner', password='Strong-password-123')
+        self.other_user = User.objects.create_user(username='prescription-other', password='Strong-password-123')
+        self.member = FamilyMember.objects.create(
+            user=self.user, full_name='Prescription Member', date_of_birth='1990-01-01', sex='O',
+        )
+        self.client.force_login(self.user)
+
+    def prescription_data(self):
+        return {
+            'doctor_name': 'Dr. Joseph', 'prescription_date': '2025-04-12',
+            'medicines': 'Medicine A, Medicine B', 'dosage_instructions': 'Twice daily',
+            'duration': '7 days',
+        }
+
+    def test_create_view_edit_delete_and_optional_file_upload(self):
+        prescription_file = SimpleUploadedFile('prescription.png', b'fake-png', content_type='image/png')
+        response = self.client.post(
+            f'/members/{self.member.id}/prescriptions/add/',
+            {**self.prescription_data(), 'prescription_file': prescription_file},
+        )
+        self.assertEqual(response.status_code, 302)
+        prescription = Prescription.objects.get(doctor_name='Dr. Joseph')
+        self.assertEqual(prescription.family_member, self.member)
+        self.assertTrue(prescription.prescription_file.name.startswith('prescriptions/'))
+
+        response = self.client.get(f'/members/{self.member.id}/')
+        self.assertContains(response, 'Dr. Joseph')
+        self.assertEqual(self.client.get(f'/prescriptions/{prescription.id}/').status_code, 200)
+        self.assertEqual(self.client.get(f'/prescriptions/{prescription.id}/file/').status_code, 200)
+
+        response = self.client.post(f'/prescriptions/{prescription.id}/edit/', {
+            **self.prescription_data(), 'doctor_name': 'Dr. Updated', 'prescription_file': '',
+        })
+        self.assertEqual(response.status_code, 302)
+        prescription.refresh_from_db()
+        self.assertEqual(prescription.doctor_name, 'Dr. Updated')
+
+        self.assertEqual(self.client.get(f'/prescriptions/{prescription.id}/delete/').status_code, 200)
+        response = self.client.post(f'/prescriptions/{prescription.id}/delete/')
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Prescription.objects.filter(id=prescription.id).exists())
+
+    def test_user_cannot_access_another_users_prescription(self):
+        other_member = FamilyMember.objects.create(
+            user=self.other_user, full_name='Other Prescription Member', date_of_birth='1990-01-01', sex='O',
+        )
+        prescription = Prescription.objects.create(
+            family_member=other_member, doctor_name='Private Doctor', prescription_date='2025-01-01', medicines='Private medicine',
+        )
+        self.assertEqual(self.client.get(f'/prescriptions/{prescription.id}/').status_code, 404)
+        self.assertEqual(self.client.get(f'/prescriptions/{prescription.id}/edit/').status_code, 404)
+        self.assertEqual(self.client.get(f'/prescriptions/{prescription.id}/delete/').status_code, 404)
+        self.assertEqual(self.client.get(f'/prescriptions/{prescription.id}/file/').status_code, 404)

@@ -3,8 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import DoctorVisitForm, FamilyMemberForm, MedicalReportForm, RegistrationForm, TestResultForm
-from .models import DoctorVisit, FamilyMember, MedicalReport, TestResult
+from .forms import DoctorVisitForm, FamilyMemberForm, MedicalReportForm, PrescriptionForm, RegistrationForm, TestResultForm
+from .models import DoctorVisit, FamilyMember, MedicalReport, Prescription, TestResult
 
 
 def register(request):
@@ -62,6 +62,7 @@ def member_detail(request, member_id):
         'test_results': member.test_results.all(),
         'medical_reports': member.medical_reports.all(),
         'doctor_visits': member.doctor_visits.all(),
+        'prescriptions': member.prescriptions.all(),
     })
 
 
@@ -207,6 +208,58 @@ def view_visit_document(request, visit_id):
     if not visit.visit_document:
         return redirect('records:member_detail', member_id=visit.family_member.id)
     return FileResponse(visit.visit_document.open('rb'), as_attachment=False, filename=visit.visit_document.name)
+
+
+@login_required
+def add_prescription(request, member_id):
+    member = get_object_or_404(FamilyMember, id=member_id, user=request.user)
+    if request.method == 'POST':
+        form = PrescriptionForm(request.POST, request.FILES)
+        if form.is_valid():
+            prescription = form.save(commit=False)
+            prescription.family_member = member
+            prescription.save()
+            return redirect('records:member_detail', member_id=member.id)
+    else:
+        form = PrescriptionForm()
+    return render(request, 'records/prescription_form.html', {'form': form, 'member': member, 'title': 'Add Prescription'})
+
+
+@login_required
+def prescription_detail(request, prescription_id):
+    prescription = get_object_or_404(Prescription, id=prescription_id, family_member__user=request.user)
+    return render(request, 'records/prescription_detail.html', {'prescription': prescription})
+
+
+@login_required
+def edit_prescription(request, prescription_id):
+    prescription = get_object_or_404(Prescription, id=prescription_id, family_member__user=request.user)
+    if request.method == 'POST':
+        form = PrescriptionForm(request.POST, request.FILES, instance=prescription)
+        if form.is_valid():
+            form.save()
+            return redirect('records:member_detail', member_id=prescription.family_member.id)
+    else:
+        form = PrescriptionForm(instance=prescription)
+    return render(request, 'records/prescription_form.html', {'form': form, 'member': prescription.family_member, 'title': 'Edit Prescription'})
+
+
+@login_required
+def delete_prescription(request, prescription_id):
+    prescription = get_object_or_404(Prescription, id=prescription_id, family_member__user=request.user)
+    if request.method == 'POST':
+        member_id = prescription.family_member.id
+        prescription.delete()
+        return redirect('records:member_detail', member_id=member_id)
+    return render(request, 'records/prescription_confirm_delete.html', {'prescription': prescription})
+
+
+@login_required
+def view_prescription_file(request, prescription_id):
+    prescription = get_object_or_404(Prescription, id=prescription_id, family_member__user=request.user)
+    if not prescription.prescription_file:
+        return redirect('records:member_detail', member_id=prescription.family_member.id)
+    return FileResponse(prescription.prescription_file.open('rb'), as_attachment=False, filename=prescription.prescription_file.name)
 
 
 @login_required

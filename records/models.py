@@ -82,3 +82,17 @@ class DoctorVisit(models.Model):
 
     def __str__(self):
         return f'{self.doctor_name} - {self.family_member.full_name} ({self.visit_date})'
+
+
+class Prescription(models.Model):
+    family_member = models.ForeignKey(FamilyMember, on_delete=models.CASCADE, related_name='prescriptions')
+    doctor_name = models.CharField(max_length=150)
+    prescription_date = models.DateField()
+    medicines = models.TextField()
+    dosage_instructions = models.TextField(blank=True)
+    duration = models.CharField(max_length=100, blank=True)
+    prescription_file = models.FileField(upload_to='prescriptions/', blank=True, null=True, validators=[validate_report_file])
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.doctor_name} - {self.family_member.full_name} ({self.prescription_date})'

@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import DoctorVisit, FamilyMember, MedicalReport, TestResult
+from .models import DoctorVisit, FamilyMember, MedicalReport, Prescription, TestResult
 
 
 class RegistrationForm(UserCreationForm):
@@ -42,3 +42,10 @@ class DoctorVisitForm(forms.ModelForm):
             'visit_date': forms.DateInput(attrs={'type': 'date'}),
             'follow_up_date': forms.DateInput(attrs={'type': 'date'}),
         }
+
+
+class PrescriptionForm(forms.ModelForm):
+    class Meta:
+        model = Prescription
+        exclude = ('family_member', 'created_at')
+        widgets = {'prescription_date': forms.DateInput(attrs={'type': 'date'})}
