@@ -372,3 +372,16 @@ class MedicalDocumentTests(TestCase):
         document = MedicalDocument.objects.create(family_member=member, title='Private', document_date='2025-01-01', document_file=SimpleUploadedFile('private.pdf', b'%PDF'))
         for url in (f'/documents/{document.id}/', f'/documents/{document.id}/edit/', f'/documents/{document.id}/delete/', f'/documents/{document.id}/file/'):
             self.assertEqual(self.client.get(url).status_code, 404)
+
+
+class TimelineTests(TestCase):
+    def test_member_profile_shows_timeline_records(self):
+        user = User.objects.create_user(username='timeline-user', password='Strong-password-123')
+        member = FamilyMember.objects.create(user=user, full_name='Timeline Member', date_of_birth='1990-01-01', sex='O')
+        TestResult.objects.create(family_member=member, test_name='Blood Test', test_date='2025-01-01')
+        DoctorVisit.objects.create(family_member=member, doctor_name='Dr. Timeline', visit_date='2025-02-01')
+        self.client.force_login(user)
+        response = self.client.get(f'/members/{member.id}/')
+        self.assertContains(response, 'Health Timeline')
+        self.assertContains(response, 'Blood Test')
+        self.assertContains(response, 'Dr. Timeline')

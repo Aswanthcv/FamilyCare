@@ -57,6 +57,20 @@ def add_member(request):
 @login_required
 def member_detail(request, member_id):
     member = get_object_or_404(FamilyMember, id=member_id, user=request.user)
+    timeline = []
+    for item in member.test_results.all():
+        timeline.append({'date': item.test_date, 'type': 'Test Result', 'title': item.test_name, 'detail': item.laboratory_or_hospital, 'url': 'records:member_detail', 'id': member.id})
+    for item in member.medical_reports.all():
+        timeline.append({'date': item.report_date, 'type': 'Medical Report', 'title': item.report_title, 'detail': item.hospital_or_clinic, 'url': 'records:member_detail', 'id': member.id})
+    for item in member.doctor_visits.all():
+        timeline.append({'date': item.visit_date, 'type': 'Doctor Visit', 'title': item.doctor_name, 'detail': item.hospital_or_clinic, 'url': 'records:doctor_visit_detail', 'id': item.id})
+    for item in member.prescriptions.all():
+        timeline.append({'date': item.prescription_date, 'type': 'Prescription', 'title': item.doctor_name, 'detail': item.medicines, 'url': 'records:prescription_detail', 'id': item.id})
+    for item in member.insurance_records.all():
+        timeline.append({'date': item.start_date, 'type': 'Insurance', 'title': item.provider_name, 'detail': item.policy_number, 'url': 'records:insurance_detail', 'id': item.id})
+    for item in member.medical_documents.all():
+        timeline.append({'date': item.document_date, 'type': 'Medical Document', 'title': item.title, 'detail': item.description, 'url': 'records:medical_document_detail', 'id': item.id})
+    timeline.sort(key=lambda item: item['date'], reverse=True)
     return render(request, 'records/member_detail.html', {
         'member': member,
         'test_results': member.test_results.all(),
@@ -65,6 +79,7 @@ def member_detail(request, member_id):
         'prescriptions': member.prescriptions.all(),
         'insurance_records': member.insurance_records.all(),
         'medical_documents': member.medical_documents.all(),
+        'timeline': timeline,
     })
 
 
