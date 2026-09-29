@@ -1,0 +1,43 @@
+/* Basic styles for the Stage 2 placeholder page. */
+body {
+    background: #f4f7fb;
+    color: #1f2937;
+    font-family: Arial, sans-serif;
+    margin: 0;
+}
+
+.site-header {
+    background: #2563eb;
+    padding: 1rem 2rem;
+}
+
+.brand {
+    color: white;
+    font-size: 1.25rem;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.container {
+    margin: 0 auto;
+    max-width: 900px;
+    padding: 3rem 1.5rem;
+}
+
+.welcome-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgb(0 0 0 / 8%);
+    padding: 2rem;
+}
+
+.eyebrow {
+    color: #2563eb;
+    font-size: 0.85rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.muted {
+    color: #6b7280;
+}
