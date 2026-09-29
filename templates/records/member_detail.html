@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block title %}{{ member.full_name }} | FamilyCare{% endblock %}
+{% block content %}<section class="welcome-card">
+{% if member.profile_image %}<img class="profile-image" src="{{ member.profile_image.url }}" alt="{{ member.full_name }}">{% endif %}<h1>{{ member.full_name }}</h1>
+<p>Age: {{ member.age }}</p><p>Sex: {{ member.get_sex_display }}</p><p>Phone: {{ member.phone|default:'Not added' }}</p><p>Email: {{ member.email|default:'Not added' }}</p><p>Blood group: {{ member.blood_group|default:'Not added' }}</p><p>Height: {{ member.height|default:'Not added' }} cm</p><p>Weight: {{ member.weight|default:'Not added' }} kg</p>
+<h2>Health information</h2><p>Medical conditions: {{ member.medical_conditions|default:'None added' }}</p><p>Allergies: {{ member.allergies|default:'None added' }}</p><p>Current medications: {{ member.current_medications|default:'None added' }}</p><p>Emergency contact: {{ member.emergency_contact|default:'Not added' }}</p><p>Additional notes: {{ member.additional_notes|default:'None added' }}</p>
+<h2>Coming later</h2><p>Test Results · Medical Reports · Doctor Visits · Prescriptions · Insurance · Other Documents</p><a class="button" href="{% url 'records:edit_member' member.id %}">Edit</a> <a href="{% url 'records:home' %}">Back to dashboard</a>
+</section>{% endblock %}
