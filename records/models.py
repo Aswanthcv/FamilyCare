@@ -66,3 +66,19 @@ class MedicalReport(models.Model):
 
     def __str__(self):
         return f'{self.report_title} - {self.family_member.full_name}'
+
+
+class DoctorVisit(models.Model):
+    family_member = models.ForeignKey(FamilyMember, on_delete=models.CASCADE, related_name='doctor_visits')
+    doctor_name = models.CharField(max_length=150)
+    hospital_or_clinic = models.CharField(max_length=150, blank=True)
+    visit_date = models.DateField()
+    reason_for_visit = models.TextField(blank=True)
+    diagnosis_or_condition = models.TextField(blank=True)
+    doctor_notes = models.TextField(blank=True)
+    follow_up_date = models.DateField(blank=True, null=True)
+    visit_document = models.FileField(upload_to='visit_documents/', blank=True, null=True, validators=[validate_report_file])
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.doctor_name} - {self.family_member.full_name} ({self.visit_date})'

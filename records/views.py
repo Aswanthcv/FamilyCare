@@ -3,8 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import FamilyMemberForm, MedicalReportForm, RegistrationForm, TestResultForm
-from .models import FamilyMember, MedicalReport, TestResult
+from .forms import DoctorVisitForm, FamilyMemberForm, MedicalReportForm, RegistrationForm, TestResultForm
+from .models import DoctorVisit, FamilyMember, MedicalReport, TestResult
 
 
 def register(request):
@@ -61,6 +61,7 @@ def member_detail(request, member_id):
         'member': member,
         'test_results': member.test_results.all(),
         'medical_reports': member.medical_reports.all(),
+        'doctor_visits': member.doctor_visits.all(),
     })
 
 
@@ -154,6 +155,58 @@ def view_medical_report(request, report_id):
     if not report.report_file:
         return redirect('records:member_detail', member_id=report.family_member.id)
     return FileResponse(report.report_file.open('rb'), as_attachment=False, filename=report.report_file.name)
+
+
+@login_required
+def add_doctor_visit(request, member_id):
+    member = get_object_or_404(FamilyMember, id=member_id, user=request.user)
+    if request.method == 'POST':
+        form = DoctorVisitForm(request.POST, request.FILES)
+        if form.is_valid():
+            visit = form.save(commit=False)
+            visit.family_member = member
+            visit.save()
+            return redirect('records:member_detail', member_id=member.id)
+    else:
+        form = DoctorVisitForm()
+    return render(request, 'records/doctor_visit_form.html', {'form': form, 'member': member, 'title': 'Add Doctor Visit'})
+
+
+@login_required
+def edit_doctor_visit(request, visit_id):
+    visit = get_object_or_404(DoctorVisit, id=visit_id, family_member__user=request.user)
+    if request.method == 'POST':
+        form = DoctorVisitForm(request.POST, request.FILES, instance=visit)
+        if form.is_valid():
+            form.save()
+            return redirect('records:member_detail', member_id=visit.family_member.id)
+    else:
+        form = DoctorVisitForm(instance=visit)
+    return render(request, 'records/doctor_visit_form.html', {'form': form, 'member': visit.family_member, 'title': 'Edit Doctor Visit'})
+
+
+@login_required
+def doctor_visit_detail(request, visit_id):
+    visit = get_object_or_404(DoctorVisit, id=visit_id, family_member__user=request.user)
+    return render(request, 'records/doctor_visit_detail.html', {'visit': visit})
+
+
+@login_required
+def delete_doctor_visit(request, visit_id):
+    visit = get_object_or_404(DoctorVisit, id=visit_id, family_member__user=request.user)
+    if request.method == 'POST':
+        member_id = visit.family_member.id
+        visit.delete()
+        return redirect('records:member_detail', member_id=member_id)
+    return render(request, 'records/doctor_visit_confirm_delete.html', {'visit': visit})
+
+
+@login_required
+def view_visit_document(request, visit_id):
+    visit = get_object_or_404(DoctorVisit, id=visit_id, family_member__user=request.user)
+    if not visit.visit_document:
+        return redirect('records:member_detail', member_id=visit.family_member.id)
+    return FileResponse(visit.visit_document.open('rb'), as_attachment=False, filename=visit.visit_document.name)
 
 
 @login_required

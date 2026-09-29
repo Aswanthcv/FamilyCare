@@ -4,7 +4,7 @@ from django.test import TestCase
 from io import BytesIO
 from PIL import Image
 
-from .models import FamilyMember, MedicalReport, TestResult
+from .models import DoctorVisit, FamilyMember, MedicalReport, TestResult
 
 class AuthenticationTests(TestCase):
     def setUp(self):
@@ -191,3 +191,61 @@ class MedicalReportTests(TestCase):
         self.assertEqual(self.client.get(f'/medical-reports/{report.id}/edit/').status_code, 404)
         self.assertEqual(self.client.get(f'/medical-reports/{report.id}/delete/').status_code, 404)
         self.assertEqual(self.client.get(f'/medical-reports/{report.id}/report/').status_code, 404)
+
+
+class DoctorVisitTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='visit-owner', password='Strong-password-123')
+        self.other_user = User.objects.create_user(username='visit-other', password='Strong-password-123')
+        self.member = FamilyMember.objects.create(
+            user=self.user, full_name='Visit Member', date_of_birth='1990-01-01', sex='O',
+        )
+        self.client.force_login(self.user)
+
+    def visit_data(self):
+        return {
+            'doctor_name': 'Dr. Menon', 'hospital_or_clinic': 'City Clinic',
+            'visit_date': '2025-03-10', 'reason_for_visit': 'Regular check-up',
+            'diagnosis_or_condition': 'Healthy', 'doctor_notes': 'Continue exercise',
+            'follow_up_date': '2025-09-10',
+        }
+
+    def test_create_view_edit_delete_and_optional_document(self):
+        document = SimpleUploadedFile('visit-note.jpg', b'fake-jpg', content_type='image/jpeg')
+        response = self.client.post(
+            f'/members/{self.member.id}/doctor-visits/add/',
+            {**self.visit_data(), 'visit_document': document},
+        )
+        self.assertEqual(response.status_code, 302)
+        visit = DoctorVisit.objects.get(doctor_name='Dr. Menon')
+        self.assertEqual(visit.family_member, self.member)
+        self.assertTrue(visit.visit_document.name.startswith('visit_documents/'))
+
+        response = self.client.get(f'/members/{self.member.id}/')
+        self.assertContains(response, 'Dr. Menon')
+        self.assertEqual(self.client.get(f'/doctor-visits/{visit.id}/').status_code, 200)
+        self.assertEqual(self.client.get(f'/doctor-visits/{visit.id}/document/').status_code, 200)
+
+        response = self.client.post(f'/doctor-visits/{visit.id}/edit/', {
+            **self.visit_data(), 'doctor_name': 'Dr. Updated', 'visit_document': '',
+        })
+        self.assertEqual(response.status_code, 302)
+        visit.refresh_from_db()
+        self.assertEqual(visit.doctor_name, 'Dr. Updated')
+
+        self.assertEqual(self.client.get(f'/doctor-visits/{visit.id}/delete/').status_code, 200)
+        response = self.client.post(f'/doctor-visits/{visit.id}/delete/')
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(DoctorVisit.objects.filter(id=visit.id).exists())
+
+    def test_user_cannot_access_another_users_visit(self):
+        other_member = FamilyMember.objects.create(
+            user=self.other_user, full_name='Other Visit Member', date_of_birth='1990-01-01', sex='O',
+        )
+        visit = DoctorVisit.objects.create(
+            family_member=other_member, doctor_name='Private Doctor', visit_date='2025-01-01',
+        )
+        self.assertEqual(self.client.get(f'/doctor-visits/{visit.id}/').status_code, 404)
+        self.assertEqual(self.client.get(f'/doctor-visits/{visit.id}/edit/').status_code, 404)
+        self.assertEqual(self.client.get(f'/doctor-visits/{visit.id}/delete/').status_code, 404)
+        self.assertEqual(self.client.get(f'/doctor-visits/{visit.id}/document/').status_code, 404)
