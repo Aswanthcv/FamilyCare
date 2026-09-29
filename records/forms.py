@@ -2,11 +2,16 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import DoctorVisit, FamilyMember, MedicalReport, Prescription, TestResult
+from .models import DoctorVisit, FamilyMember, Insurance, MedicalDocument, MedicalReport, Prescription, TestResult
 
 
 class RegistrationForm(UserCreationForm):
     email = forms.EmailField(required=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].label = 'Family Name'
+        self.fields['username'].help_text = 'Enter the family name used to log in.'
 
     class Meta:
         model = User
@@ -49,3 +54,20 @@ class PrescriptionForm(forms.ModelForm):
         model = Prescription
         exclude = ('family_member', 'created_at')
         widgets = {'prescription_date': forms.DateInput(attrs={'type': 'date'})}
+
+
+class InsuranceForm(forms.ModelForm):
+    class Meta:
+        model = Insurance
+        exclude = ('family_member', 'created_at')
+        widgets = {
+            'start_date': forms.DateInput(attrs={'type': 'date'}),
+            'expiry_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+
+class MedicalDocumentForm(forms.ModelForm):
+    class Meta:
+        model = MedicalDocument
+        exclude = ('family_member', 'created_at')
+        widgets = {'document_date': forms.DateInput(attrs={'type': 'date'})}

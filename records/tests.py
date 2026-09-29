@@ -4,7 +4,7 @@ from django.test import TestCase
 from io import BytesIO
 from PIL import Image
 
-from .models import DoctorVisit, FamilyMember, MedicalReport, Prescription, TestResult
+from .models import DoctorVisit, FamilyMember, Insurance, MedicalDocument, MedicalReport, Prescription, TestResult
 
 class AuthenticationTests(TestCase):
     def setUp(self):
@@ -306,3 +306,69 @@ class PrescriptionTests(TestCase):
         self.assertEqual(self.client.get(f'/prescriptions/{prescription.id}/edit/').status_code, 404)
         self.assertEqual(self.client.get(f'/prescriptions/{prescription.id}/delete/').status_code, 404)
         self.assertEqual(self.client.get(f'/prescriptions/{prescription.id}/file/').status_code, 404)
+
+
+class InsuranceTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='insurance-owner', password='Strong-password-123')
+        self.other_user = User.objects.create_user(username='insurance-other', password='Strong-password-123')
+        self.member = FamilyMember.objects.create(user=self.user, full_name='Insurance Member', date_of_birth='1990-01-01', sex='O')
+        self.client.force_login(self.user)
+
+    def data(self):
+        return {'provider_name': 'Health Cover', 'policy_number': 'POL-123', 'member_id': 'MEM-123', 'start_date': '2025-01-01', 'expiry_date': '2026-01-01', 'notes': 'Main policy'}
+
+    def test_insurance_crud_file_and_ownership(self):
+        card = SimpleUploadedFile('card.pdf', b'%PDF-card', content_type='application/pdf')
+        response = self.client.post(f'/members/{self.member.id}/insurance/add/', {**self.data(), 'insurance_card': card})
+        self.assertEqual(response.status_code, 302)
+        insurance = Insurance.objects.get(provider_name='Health Cover')
+        self.assertTrue(insurance.insurance_card.name.startswith('insurance_cards/'))
+        self.assertContains(self.client.get(f'/members/{self.member.id}/'), 'Health Cover')
+        self.assertEqual(self.client.get(f'/insurance/{insurance.id}/').status_code, 200)
+        self.assertEqual(self.client.get(f'/insurance/{insurance.id}/card/').status_code, 200)
+        self.assertEqual(self.client.post(f'/insurance/{insurance.id}/edit/', {**self.data(), 'provider_name': 'Updated Cover', 'insurance_card': ''}).status_code, 302)
+        insurance.refresh_from_db()
+        self.assertEqual(insurance.provider_name, 'Updated Cover')
+        self.assertEqual(self.client.get(f'/insurance/{insurance.id}/delete/').status_code, 200)
+        self.assertEqual(self.client.post(f'/insurance/{insurance.id}/delete/').status_code, 302)
+        self.assertFalse(Insurance.objects.filter(id=insurance.id).exists())
+
+    def test_other_user_cannot_access_insurance(self):
+        member = FamilyMember.objects.create(user=self.other_user, full_name='Other', date_of_birth='1990-01-01', sex='O')
+        insurance = Insurance.objects.create(family_member=member, provider_name='Private', policy_number='P', member_id='M', start_date='2025-01-01', expiry_date='2026-01-01')
+        for url in (f'/insurance/{insurance.id}/', f'/insurance/{insurance.id}/edit/', f'/insurance/{insurance.id}/delete/', f'/insurance/{insurance.id}/card/'):
+            self.assertEqual(self.client.get(url).status_code, 404)
+
+
+class MedicalDocumentTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='document-owner', password='Strong-password-123')
+        self.other_user = User.objects.create_user(username='document-other', password='Strong-password-123')
+        self.member = FamilyMember.objects.create(user=self.user, full_name='Document Member', date_of_birth='1990-01-01', sex='O')
+        self.client.force_login(self.user)
+
+    def data(self):
+        return {'title': 'Vaccination Record', 'document_date': '2025-05-01', 'description': 'Vaccination details'}
+
+    def test_document_crud_file_and_ownership(self):
+        document_file = SimpleUploadedFile('vaccine.jpg', b'fake-jpg', content_type='image/jpeg')
+        response = self.client.post(f'/members/{self.member.id}/documents/add/', {**self.data(), 'document_file': document_file})
+        self.assertEqual(response.status_code, 302)
+        document = MedicalDocument.objects.get(title='Vaccination Record')
+        self.assertTrue(document.document_file.name.startswith('medical_documents/'))
+        self.assertContains(self.client.get(f'/members/{self.member.id}/'), 'Vaccination Record')
+        self.assertEqual(self.client.get(f'/documents/{document.id}/').status_code, 200)
+        self.assertEqual(self.client.get(f'/documents/{document.id}/file/').status_code, 200)
+        self.assertEqual(self.client.post(f'/documents/{document.id}/edit/', {**self.data(), 'title': 'Updated Record', 'document_file': ''}).status_code, 302)
+        document.refresh_from_db()
+        self.assertEqual(document.title, 'Updated Record')
+        self.assertEqual(self.client.get(f'/documents/{document.id}/delete/').status_code, 200)
+        self.assertEqual(self.client.post(f'/documents/{document.id}/delete/').status_code, 302)
+        self.assertFalse(MedicalDocument.objects.filter(id=document.id).exists())
+
+    def test_other_user_cannot_access_document(self):
+        member = FamilyMember.objects.create(user=self.other_user, full_name='Other', date_of_birth='1990-01-01', sex='O')
+        document = MedicalDocument.objects.create(family_member=member, title='Private', document_date='2025-01-01', document_file=SimpleUploadedFile('private.pdf', b'%PDF'))
+        for url in (f'/documents/{document.id}/', f'/documents/{document.id}/edit/', f'/documents/{document.id}/delete/', f'/documents/{document.id}/file/'):
+            self.assertEqual(self.client.get(url).status_code, 404)

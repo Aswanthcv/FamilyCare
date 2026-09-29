@@ -3,8 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import DoctorVisitForm, FamilyMemberForm, MedicalReportForm, PrescriptionForm, RegistrationForm, TestResultForm
-from .models import DoctorVisit, FamilyMember, MedicalReport, Prescription, TestResult
+from .forms import DoctorVisitForm, FamilyMemberForm, InsuranceForm, MedicalDocumentForm, MedicalReportForm, PrescriptionForm, RegistrationForm, TestResultForm
+from .models import DoctorVisit, FamilyMember, Insurance, MedicalDocument, MedicalReport, Prescription, TestResult
 
 
 def register(request):
@@ -63,6 +63,8 @@ def member_detail(request, member_id):
         'medical_reports': member.medical_reports.all(),
         'doctor_visits': member.doctor_visits.all(),
         'prescriptions': member.prescriptions.all(),
+        'insurance_records': member.insurance_records.all(),
+        'medical_documents': member.medical_documents.all(),
     })
 
 
@@ -260,6 +262,108 @@ def view_prescription_file(request, prescription_id):
     if not prescription.prescription_file:
         return redirect('records:member_detail', member_id=prescription.family_member.id)
     return FileResponse(prescription.prescription_file.open('rb'), as_attachment=False, filename=prescription.prescription_file.name)
+
+
+@login_required
+def add_insurance(request, member_id):
+    member = get_object_or_404(FamilyMember, id=member_id, user=request.user)
+    if request.method == 'POST':
+        form = InsuranceForm(request.POST, request.FILES)
+        if form.is_valid():
+            insurance = form.save(commit=False)
+            insurance.family_member = member
+            insurance.save()
+            return redirect('records:member_detail', member_id=member.id)
+    else:
+        form = InsuranceForm()
+    return render(request, 'records/insurance_form.html', {'form': form, 'member': member, 'title': 'Add Insurance'})
+
+
+@login_required
+def insurance_detail(request, insurance_id):
+    insurance = get_object_or_404(Insurance, id=insurance_id, family_member__user=request.user)
+    return render(request, 'records/insurance_detail.html', {'insurance': insurance})
+
+
+@login_required
+def edit_insurance(request, insurance_id):
+    insurance = get_object_or_404(Insurance, id=insurance_id, family_member__user=request.user)
+    if request.method == 'POST':
+        form = InsuranceForm(request.POST, request.FILES, instance=insurance)
+        if form.is_valid():
+            form.save()
+            return redirect('records:member_detail', member_id=insurance.family_member.id)
+    else:
+        form = InsuranceForm(instance=insurance)
+    return render(request, 'records/insurance_form.html', {'form': form, 'member': insurance.family_member, 'title': 'Edit Insurance'})
+
+
+@login_required
+def delete_insurance(request, insurance_id):
+    insurance = get_object_or_404(Insurance, id=insurance_id, family_member__user=request.user)
+    if request.method == 'POST':
+        member_id = insurance.family_member.id
+        insurance.delete()
+        return redirect('records:member_detail', member_id=member_id)
+    return render(request, 'records/insurance_confirm_delete.html', {'insurance': insurance})
+
+
+@login_required
+def view_insurance_card(request, insurance_id):
+    insurance = get_object_or_404(Insurance, id=insurance_id, family_member__user=request.user)
+    if not insurance.insurance_card:
+        return redirect('records:member_detail', member_id=insurance.family_member.id)
+    return FileResponse(insurance.insurance_card.open('rb'), as_attachment=False, filename=insurance.insurance_card.name)
+
+
+@login_required
+def add_medical_document(request, member_id):
+    member = get_object_or_404(FamilyMember, id=member_id, user=request.user)
+    if request.method == 'POST':
+        form = MedicalDocumentForm(request.POST, request.FILES)
+        if form.is_valid():
+            document = form.save(commit=False)
+            document.family_member = member
+            document.save()
+            return redirect('records:member_detail', member_id=member.id)
+    else:
+        form = MedicalDocumentForm()
+    return render(request, 'records/medical_document_form.html', {'form': form, 'member': member, 'title': 'Upload Medical Document'})
+
+
+@login_required
+def medical_document_detail(request, document_id):
+    document = get_object_or_404(MedicalDocument, id=document_id, family_member__user=request.user)
+    return render(request, 'records/medical_document_detail.html', {'document': document})
+
+
+@login_required
+def edit_medical_document(request, document_id):
+    document = get_object_or_404(MedicalDocument, id=document_id, family_member__user=request.user)
+    if request.method == 'POST':
+        form = MedicalDocumentForm(request.POST, request.FILES, instance=document)
+        if form.is_valid():
+            form.save()
+            return redirect('records:member_detail', member_id=document.family_member.id)
+    else:
+        form = MedicalDocumentForm(instance=document)
+    return render(request, 'records/medical_document_form.html', {'form': form, 'member': document.family_member, 'title': 'Edit Medical Document'})
+
+
+@login_required
+def delete_medical_document(request, document_id):
+    document = get_object_or_404(MedicalDocument, id=document_id, family_member__user=request.user)
+    if request.method == 'POST':
+        member_id = document.family_member.id
+        document.delete()
+        return redirect('records:member_detail', member_id=member_id)
+    return render(request, 'records/medical_document_confirm_delete.html', {'document': document})
+
+
+@login_required
+def view_medical_document(request, document_id):
+    document = get_object_or_404(MedicalDocument, id=document_id, family_member__user=request.user)
+    return FileResponse(document.document_file.open('rb'), as_attachment=False, filename=document.document_file.name)
 
 
 @login_required

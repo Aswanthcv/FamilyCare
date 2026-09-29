@@ -96,3 +96,30 @@ class Prescription(models.Model):
 
     def __str__(self):
         return f'{self.doctor_name} - {self.family_member.full_name} ({self.prescription_date})'
+
+
+class Insurance(models.Model):
+    family_member = models.ForeignKey(FamilyMember, on_delete=models.CASCADE, related_name='insurance_records')
+    provider_name = models.CharField(max_length=150)
+    policy_number = models.CharField(max_length=150)
+    member_id = models.CharField(max_length=150)
+    start_date = models.DateField()
+    expiry_date = models.DateField()
+    insurance_card = models.FileField(upload_to='insurance_cards/', blank=True, null=True, validators=[validate_report_file])
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.provider_name} - {self.family_member.full_name}'
+
+
+class MedicalDocument(models.Model):
+    family_member = models.ForeignKey(FamilyMember, on_delete=models.CASCADE, related_name='medical_documents')
+    title = models.CharField(max_length=150)
+    document_date = models.DateField()
+    description = models.TextField(blank=True)
+    document_file = models.FileField(upload_to='medical_documents/', validators=[validate_report_file])
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.title} - {self.family_member.full_name}'
