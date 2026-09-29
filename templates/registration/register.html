@@ -3,10 +3,10 @@
 {% block content %}
 <section class="form-card">
     <h1>Create your FamilyCare account</h1>
-    <form method="post">
+    <form method="post" class="form-layout compact-form">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Register</button>
+        <div class="form-actions"><button type="submit">Register</button></div>
     </form>
     <p>Already registered? <a href="{% url 'records:login' %}">Log in</a>.</p>
 </section>

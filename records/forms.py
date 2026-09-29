@@ -1,8 +1,24 @@
+from datetime import date
+
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
 from .models import DoctorVisit, FamilyMember, Insurance, MedicalDocument, MedicalReport, Prescription, TestResult
+
+
+class NoFutureDateFormMixin:
+    """Reject dates after today for records describing past health events."""
+
+    past_date_fields = ()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        for field_name in self.past_date_fields:
+            selected_date = cleaned_data.get(field_name)
+            if selected_date and selected_date > date.today():
+                self.add_error(field_name, 'This date cannot be in the future.')
+        return cleaned_data
 
 
 class RegistrationForm(UserCreationForm):
@@ -12,34 +28,44 @@ class RegistrationForm(UserCreationForm):
         super().__init__(*args, **kwargs)
         self.fields['username'].label = 'Family Name'
         self.fields['username'].help_text = 'Enter the family name used to log in.'
+        self.fields['password1'].help_text = 'Use at least 8 characters.'
+        self.fields['password2'].help_text = ''
 
     class Meta:
         model = User
         fields = ('username', 'email', 'password1', 'password2')
 
 
-class FamilyMemberForm(forms.ModelForm):
+class FamilyMemberForm(NoFutureDateFormMixin, forms.ModelForm):
+    past_date_fields = ('date_of_birth',)
+
     class Meta:
         model = FamilyMember
         exclude = ('user',)
         widgets = {'date_of_birth': forms.DateInput(attrs={'type': 'date'})}
 
 
-class TestResultForm(forms.ModelForm):
+class TestResultForm(NoFutureDateFormMixin, forms.ModelForm):
+    past_date_fields = ('test_date',)
+
     class Meta:
         model = TestResult
         exclude = ('family_member', 'created_at')
         widgets = {'test_date': forms.DateInput(attrs={'type': 'date'})}
 
 
-class MedicalReportForm(forms.ModelForm):
+class MedicalReportForm(NoFutureDateFormMixin, forms.ModelForm):
+    past_date_fields = ('report_date',)
+
     class Meta:
         model = MedicalReport
         exclude = ('family_member', 'created_at')
         widgets = {'report_date': forms.DateInput(attrs={'type': 'date'})}
 
 
-class DoctorVisitForm(forms.ModelForm):
+class DoctorVisitForm(NoFutureDateFormMixin, forms.ModelForm):
+    past_date_fields = ('visit_date',)
+
     class Meta:
         model = DoctorVisit
         exclude = ('family_member', 'created_at')
@@ -49,7 +75,9 @@ class DoctorVisitForm(forms.ModelForm):
         }
 
 
-class PrescriptionForm(forms.ModelForm):
+class PrescriptionForm(NoFutureDateFormMixin, forms.ModelForm):
+    past_date_fields = ('prescription_date',)
+
     class Meta:
         model = Prescription
         exclude = ('family_member', 'created_at')
@@ -66,7 +94,9 @@ class InsuranceForm(forms.ModelForm):
         }
 
 
-class MedicalDocumentForm(forms.ModelForm):
+class MedicalDocumentForm(NoFutureDateFormMixin, forms.ModelForm):
+    past_date_fields = ('document_date',)
+
     class Meta:
         model = MedicalDocument
         exclude = ('family_member', 'created_at')

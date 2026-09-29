@@ -1,76 +1,182 @@
-/* Basic styles for the Stage 2 placeholder page. */
+/* =========================================================
+   1. THEME VARIABLES
+   ========================================================= */
+:root {
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --accent: #0d9488;
+    --bg: #f4f7fb;
+    --surface: #ffffff;
+    --surface-hover: #f8fafc;
+    --text: #1f2937;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --success: #15803d;
+    --warning: #b45309;
+    --danger: #b91c1c;
+    --info: #0369a1;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 12px;
+    --shadow-sm: 0 2px 8px rgb(15 23 42 / 5%);
+    --shadow-md: 0 8px 22px rgb(15 23 42 / 9%);
+    --transition-fast: 180ms ease;
+    --transition-normal: 250ms ease;
+}
+
+/* =========================================================
+   2. RESET / BASE STYLES
+   ========================================================= */
+* { box-sizing: border-box; }
 body {
-    background: #f4f7fb;
-    color: #1f2937;
+    background: var(--bg);
+    color: var(--text);
     font-family: Arial, sans-serif;
     line-height: 1.5;
     margin: 0;
 }
+a { color: var(--primary); transition: color var(--transition-fast); }
+a:hover { color: var(--primary-hover); }
 
-.site-header {
-    align-items: center;
-    background: #2563eb;
-    display: flex;
-    justify-content: space-between;
-    padding: 1rem 2rem;
-}
+/* =========================================================
+   3. TYPOGRAPHY
+   ========================================================= */
+h1, h2, h3 { line-height: 1.25; }
+h1 { letter-spacing: -0.02em; }
+h2 { border-left: 3px solid var(--accent); padding-left: 0.65rem; }
+.eyebrow { color: var(--primary); font-size: 0.78rem; font-weight: bold; letter-spacing: 0.08em; margin-bottom: 0.4rem; text-transform: uppercase; }
+.muted, .form-subtitle { color: var(--text-muted); }
+.form-subtitle { margin-top: -0.5rem; }
 
-.site-header a { color: white; margin-left: 1rem; }
+/* =========================================================
+   4. LAYOUT / CONTAINERS
+   ========================================================= */
+.container { margin: 0 auto; max-width: 1100px; padding: 3rem 1.5rem; }
+.page-heading { align-items: center; display: flex; justify-content: space-between; margin-bottom: 1.75rem; }
+
+/* =========================================================
+   5. NAVBAR / HEADER
+   ========================================================= */
+.site-header { align-items: center; background: var(--primary); display: flex; justify-content: space-between; padding: 1rem 2rem; }
+.brand { color: white; font-size: 1.3rem; font-weight: bold; letter-spacing: -0.02em; text-decoration: none; }
+.brand:hover { color: white; }
 .site-header nav { align-items: center; display: flex; flex-wrap: wrap; gap: 0.75rem; }
-.site-header nav a { margin-left: 0; }
+.site-header nav a { border-radius: var(--radius-sm); color: white; margin: 0; padding: 0.35rem 0.55rem; text-decoration: none; }
+.site-header nav a:hover { background: rgb(255 255 255 / 15%); color: white; }
 .nav-user { color: #dbeafe; font-weight: bold; }
 
-.brand {
-    color: white;
-    font-size: 1.25rem;
-    font-weight: bold;
-    text-decoration: none;
-}
-
-.container {
-    margin: 0 auto;
-    max-width: 1100px;
-    padding: 3rem 1.5rem;
-}
-
-.welcome-card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 14px rgb(0 0 0 / 8%);
-    padding: 2rem;
-    margin-bottom: 1.5rem;
-}
-
-.eyebrow {
-    color: #2563eb;
-    font-size: 0.85rem;
-    font-weight: bold;
-    text-transform: uppercase;
-}
-
-.muted {
-    color: #6b7280;
-}
-
-.form-card { background: white; border-radius: 12px; margin: 0 auto; max-width: 500px; padding: 2rem; }
-label { display: block; font-weight: bold; margin-bottom: 0.35rem; }
-input { box-sizing: border-box; padding: 0.6rem; width: 100%; }
-button { background: #2563eb; border: 0; border-radius: 4px; color: white; cursor: pointer; padding: 0.7rem 1rem; }
-.error { color: #b91c1c; }
-.page-heading { align-items: center; display: flex; justify-content: space-between; }
-.button { background: #2563eb; border-radius: 4px; color: white; padding: 0.7rem 1rem; text-decoration: none; }
-.button:hover, button:hover { background: #1d4ed8; }
+/* =========================================================
+   6. BUTTONS
+   ========================================================= */
+.button, button { background: var(--primary); border: 0; border-radius: var(--radius-sm); color: white; cursor: pointer; font: inherit; font-weight: bold; padding: 0.7rem 1rem; text-decoration: none; transition: background var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast); }
+.button:hover, button:hover { background: var(--primary-hover); box-shadow: var(--shadow-sm); color: white; transform: translateY(-1px); }
 .button.small { padding: 0.5rem 0.75rem; }
-.member-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-.member-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 1.25rem; }
-.dashboard-card { box-shadow: 0 4px 14px rgb(0 0 0 / 6%); }
-.card-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
-.member-card img, .profile-image { border-radius: 50%; height: 100px; object-fit: cover; width: 100px; }
+.secondary-action { color: var(--text-muted); }
+.secondary-action:hover { color: var(--primary); }
+.danger-action { color: var(--danger); }
+.form-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.5rem; }
+
+/* =========================================================
+   7. FORMS / INPUTS
+   ========================================================= */
+.form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); margin: 0 auto 1.5rem; max-width: 500px; padding: 2rem; }
+.form-card h1 { margin-top: 0; }
 .wide-form { max-width: 700px; }
+.form-layout { display: grid; gap: 1rem; }
+.form-layout:not(.compact-form) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.form-layout p { margin: 0; }
+.form-layout:not(.compact-form) p:has(textarea), .form-layout:not(.compact-form) p:has(input[type="file"]), .form-layout:not(.compact-form) p:has(.errorlist), .form-layout:not(.compact-form) .form-actions { grid-column: 1 / -1; }
+label { display: block; font-size: 0.9rem; font-weight: bold; margin-bottom: 0.35rem; }
+input, select, textarea { background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); color: var(--text); font: inherit; padding: 0.7rem; transition: border-color var(--transition-fast), box-shadow var(--transition-fast); width: 100%; }
+textarea { height: 78px; min-height: 78px; resize: vertical; }
+input[type="file"] { padding: 0.5rem; }
+input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgb(37 99 235 / 15%); outline: none; }
+.error, .errorlist { color: var(--danger); }
+.errorlist { font-size: 0.85rem; list-style: none; margin: 0 0 0.35rem; padding: 0; }
+
+/* =========================================================
+   8. CARDS
+   ========================================================= */
+.welcome-card, .member-card, .timeline-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); }
+.welcome-card { box-shadow: var(--shadow-sm); margin-bottom: 1.5rem; padding: 2rem; }
+.member-card { padding: 1.25rem; transition: border-color var(--transition-normal), box-shadow var(--transition-normal), transform var(--transition-normal); }
+.member-card:hover, .timeline-item:hover { border-color: #bfdbfe; box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.member-card h2, .member-card h3 { margin-top: 0; }
+.member-card img, .profile-image { border-radius: 50%; height: 100px; object-fit: cover; width: 100px; }
+.member-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.dashboard-card { box-shadow: var(--shadow-sm); }
+.card-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
+
+/* =========================================================
+   9. DASHBOARD
+   ========================================================= */
+.page-heading h1 { font-size: clamp(1.7rem, 3vw, 2.3rem); margin: 0; }
+.dashboard-card h2 { color: var(--primary-hover); }
+
+/* =========================================================
+   10. FAMILY MEMBER UI
+   ========================================================= */
+.profile-image { margin-bottom: 0.5rem; }
+
+/* =========================================================
+   11. RECORD UI
+   ========================================================= */
+.member-card p { margin: 0.35rem 0; }
+.member-card + .member-card { margin-top: 0.75rem; }
+
+/* =========================================================
+   12. TIMELINE
+   ========================================================= */
 .timeline { border-left: 3px solid #bfdbfe; margin: 1rem 0 2rem 0.75rem; padding-left: 1.5rem; }
-.timeline-item { background: white; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 1rem; padding: 1rem; position: relative; }
-.timeline-item::before { background: #2563eb; border: 3px solid #dbeafe; border-radius: 50%; content: ''; height: 10px; left: -2rem; position: absolute; top: 1.25rem; width: 10px; }
-.timeline-date { color: #4b5563; font-weight: bold; margin: 0; }
-table { border-collapse: collapse; width: 100%; }
-th, td { border-bottom: 1px solid #e5e7eb; padding: 0.75rem; text-align: left; }
-@media (max-width: 640px) { .site-header { align-items: flex-start; flex-direction: column; gap: 0.75rem; padding: 1rem; } .container { padding: 2rem 1rem; } .page-heading { align-items: flex-start; flex-direction: column; gap: 1rem; } }
+.timeline-item { margin-bottom: 1rem; padding: 1rem; position: relative; transition: border-color var(--transition-normal), box-shadow var(--transition-normal), transform var(--transition-normal); }
+.timeline-item::before { background: var(--accent); border: 3px solid #ccfbf1; border-radius: 50%; content: ''; height: 10px; left: -2rem; position: absolute; top: 1.25rem; width: 10px; }
+.timeline-date { color: var(--text-muted); font-size: 0.9rem; font-weight: bold; margin: 0; }
+
+/* =========================================================
+   13. STATUS / BADGES
+   ========================================================= */
+.status-success { color: var(--success); }
+.status-warning { color: var(--warning); }
+.status-danger { color: var(--danger); }
+.status-info { color: var(--info); }
+
+/* =========================================================
+   14. ALERTS / MESSAGES
+   ========================================================= */
+.error { background: #fef2f2; border-radius: var(--radius-sm); padding: 0.65rem 0.8rem; }
+
+/* =========================================================
+   15. EMPTY STATES
+   ========================================================= */
+.empty-state { background: var(--surface-hover); border: 1px dashed var(--border-strong); border-radius: var(--radius-md); padding: 1.5rem; text-align: center; }
+
+/* =========================================================
+   16. FILE UPLOAD UI
+   ========================================================= */
+input[type="file"]::file-selector-button { background: #dbeafe; border: 0; border-radius: var(--radius-sm); color: #1e40af; cursor: pointer; margin-right: 0.65rem; padding: 0.45rem 0.65rem; }
+
+/* =========================================================
+   17. UTILITY CLASSES
+   ========================================================= */
+.text-muted { color: var(--text-muted); }
+.text-center { text-align: center; }
+
+/* =========================================================
+   18. RESPONSIVE DESIGN
+   ========================================================= */
+@media (max-width: 640px) {
+    .site-header { align-items: flex-start; flex-direction: column; gap: 0.75rem; padding: 1rem; }
+    .container { padding: 2rem 1rem; }
+    .page-heading { align-items: flex-start; flex-direction: column; gap: 1rem; }
+    .form-layout:not(.compact-form) { grid-template-columns: 1fr; }
+    .form-card { padding: 1.25rem; }
+    .form-actions button, .form-actions a { min-height: 44px; }
+}
+
+/* =========================================================
+   19. REDUCED MOTION
+   ========================================================= */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+}
