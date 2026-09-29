@@ -1,5 +1,12 @@
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.db import models
+
+
+def validate_report_file(file):
+    allowed_extensions = ('.pdf', '.jpg', '.jpeg', '.png')
+    if not file.name.lower().endswith(allowed_extensions):
+        raise ValidationError('Only PDF, JPG, JPEG, and PNG files are allowed.')
 
 
 class FamilyMember(models.Model):
@@ -32,3 +39,30 @@ class FamilyMember(models.Model):
         from datetime import date
         today = date.today()
         return today.year - self.date_of_birth.year - ((today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
+
+
+class TestResult(models.Model):
+    family_member = models.ForeignKey(FamilyMember, on_delete=models.CASCADE, related_name='test_results')
+    test_name = models.CharField(max_length=150)
+    test_date = models.DateField()
+    laboratory_or_hospital = models.CharField(max_length=150, blank=True)
+    result_summary = models.TextField(blank=True)
+    report_file = models.FileField(upload_to='test_reports/', blank=True, null=True, validators=[validate_report_file])
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.test_name} - {self.family_member.full_name}'
+
+
+class MedicalReport(models.Model):
+    family_member = models.ForeignKey(FamilyMember, on_delete=models.CASCADE, related_name='medical_reports')
+    report_title = models.CharField(max_length=150)
+    report_date = models.DateField()
+    hospital_or_clinic = models.CharField(max_length=150, blank=True)
+    doctor_name = models.CharField(max_length=150, blank=True)
+    notes = models.TextField(blank=True)
+    report_file = models.FileField(upload_to='medical_reports/', blank=True, null=True, validators=[validate_report_file])
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.report_title} - {self.family_member.full_name}'

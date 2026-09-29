@@ -4,7 +4,7 @@ from django.test import TestCase
 from io import BytesIO
 from PIL import Image
 
-from .models import FamilyMember
+from .models import FamilyMember, MedicalReport, TestResult
 
 class AuthenticationTests(TestCase):
     def setUp(self):
@@ -80,3 +80,114 @@ class FamilyMemberTests(TestCase):
         self.assertEqual(self.client.get(f'/members/{member.id}/').status_code, 404)
         self.assertEqual(self.client.get(f'/members/{member.id}/edit/').status_code, 404)
         self.assertEqual(self.client.get(f'/members/{member.id}/delete/').status_code, 404)
+
+
+class TestResultTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='test-owner', password='Strong-password-123')
+        self.other_user = User.objects.create_user(username='test-other', password='Strong-password-123')
+        self.member = FamilyMember.objects.create(
+            user=self.user, full_name='Test Member', date_of_birth='1990-01-01', sex='O',
+        )
+        self.client.force_login(self.user)
+
+    def result_data(self):
+        return {
+            'test_name': 'Blood Test', 'test_date': '2025-01-15',
+            'laboratory_or_hospital': 'City Hospital', 'result_summary': 'All normal',
+        }
+
+    def test_create_view_edit_delete_and_file_upload(self):
+        report = SimpleUploadedFile('blood-test.pdf', b'%PDF-demo', content_type='application/pdf')
+        response = self.client.post(
+            f'/members/{self.member.id}/tests/add/',
+            {**self.result_data(), 'report_file': report},
+        )
+        self.assertEqual(response.status_code, 302)
+        result = TestResult.objects.get(test_name='Blood Test')
+        self.assertEqual(result.family_member, self.member)
+        self.assertTrue(result.report_file.name.startswith('test_reports/'))
+
+        response = self.client.get(f'/members/{self.member.id}/')
+        self.assertContains(response, 'Blood Test')
+        response = self.client.get(f'/test-results/{result.id}/report/')
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.post(f'/test-results/{result.id}/edit/', {
+            **self.result_data(), 'test_name': 'Updated Blood Test', 'report_file': '',
+        })
+        self.assertEqual(response.status_code, 302)
+        result.refresh_from_db()
+        self.assertEqual(result.test_name, 'Updated Blood Test')
+
+        self.assertEqual(self.client.get(f'/test-results/{result.id}/delete/').status_code, 200)
+        response = self.client.post(f'/test-results/{result.id}/delete/')
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(TestResult.objects.filter(id=result.id).exists())
+
+    def test_user_cannot_access_another_users_test_result(self):
+        other_member = FamilyMember.objects.create(
+            user=self.other_user, full_name='Other Member', date_of_birth='1990-01-01', sex='O',
+        )
+        result = TestResult.objects.create(
+            family_member=other_member, test_name='Private Test', test_date='2025-01-01',
+        )
+        self.assertEqual(self.client.get(f'/test-results/{result.id}/edit/').status_code, 404)
+        self.assertEqual(self.client.get(f'/test-results/{result.id}/delete/').status_code, 404)
+        self.assertEqual(self.client.get(f'/test-results/{result.id}/report/').status_code, 404)
+
+
+class MedicalReportTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='report-owner', password='Strong-password-123')
+        self.other_user = User.objects.create_user(username='report-other', password='Strong-password-123')
+        self.member = FamilyMember.objects.create(
+            user=self.user, full_name='Report Member', date_of_birth='1990-01-01', sex='O',
+        )
+        self.client.force_login(self.user)
+
+    def report_data(self):
+        return {
+            'report_title': 'Cardiology Report', 'report_date': '2025-02-20',
+            'hospital_or_clinic': 'Heart Clinic', 'doctor_name': 'Dr. Rao',
+            'notes': 'Follow-up recommended',
+        }
+
+    def test_create_view_edit_delete_and_file_upload(self):
+        report_file = SimpleUploadedFile('cardiology.pdf', b'%PDF-demo', content_type='application/pdf')
+        response = self.client.post(
+            f'/members/{self.member.id}/medical-reports/add/',
+            {**self.report_data(), 'report_file': report_file},
+        )
+        self.assertEqual(response.status_code, 302)
+        report = MedicalReport.objects.get(report_title='Cardiology Report')
+        self.assertEqual(report.family_member, self.member)
+        self.assertTrue(report.report_file.name.startswith('medical_reports/'))
+
+        response = self.client.get(f'/members/{self.member.id}/')
+        self.assertContains(response, 'Cardiology Report')
+        response = self.client.get(f'/medical-reports/{report.id}/report/')
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.post(f'/medical-reports/{report.id}/edit/', {
+            **self.report_data(), 'report_title': 'Updated Cardiology Report', 'report_file': '',
+        })
+        self.assertEqual(response.status_code, 302)
+        report.refresh_from_db()
+        self.assertEqual(report.report_title, 'Updated Cardiology Report')
+
+        self.assertEqual(self.client.get(f'/medical-reports/{report.id}/delete/').status_code, 200)
+        response = self.client.post(f'/medical-reports/{report.id}/delete/')
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(MedicalReport.objects.filter(id=report.id).exists())
+
+    def test_user_cannot_access_another_users_medical_report(self):
+        other_member = FamilyMember.objects.create(
+            user=self.other_user, full_name='Other Report Member', date_of_birth='1990-01-01', sex='O',
+        )
+        report = MedicalReport.objects.create(
+            family_member=other_member, report_title='Private Report', report_date='2025-01-01',
+        )
+        self.assertEqual(self.client.get(f'/medical-reports/{report.id}/edit/').status_code, 404)
+        self.assertEqual(self.client.get(f'/medical-reports/{report.id}/delete/').status_code, 404)
+        self.assertEqual(self.client.get(f'/medical-reports/{report.id}/report/').status_code, 404)
